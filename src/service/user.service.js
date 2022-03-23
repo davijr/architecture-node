@@ -1,8 +1,7 @@
-import User from './../model/User.js'
+import User from '@model/User'
 
 export class UserService {
-
-    create(user) {
-        return User.create(user);
-    }
+  create (user) {
+    return User.create(user)
+  }
 }

@@ -1,7 +1,10 @@
 {
-    "watch": ["src"],
-    "ext": "ts",
+    "restartable": "rs",
+    "ignore": [".git", "node_modules/**/node_modules"],
+    "verbose": true,
+    "watch": ["src/"],
+    "ext": "js,json,ts",
     "execMap": {
-        "ts": "npx sucrase-node src/index.ts"
+        "ts": "npx ts-node-dev -r tsconfig-paths/register --respawn --ignore-watch node_modules --no-notify"
     }
 }

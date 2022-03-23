@@ -14,22 +14,22 @@
 // }
 
 import * as Sequelize from 'sequelize'
-import database from './../config/database.js'
- 
+import database from '@config/database'
+
 const User = database.define('user', {
-    id: {
-        type: Sequelize.STRING,
-        allowNull: false,
-        primaryKey: true
-    },
-    name: {
-        type: Sequelize.STRING,
-        allowNull: false
-    },
-    cpf: {
-        type: Sequelize.STRING
-    },
-    email: Sequelize.STRING
+  id: {
+    type: Sequelize.STRING,
+    allowNull: false,
+    primaryKey: true
+  },
+  name: {
+    type: Sequelize.STRING,
+    allowNull: false
+  },
+  cpf: {
+    type: Sequelize.STRING
+  },
+  email: Sequelize.STRING
 })
- 
+
 export default User
