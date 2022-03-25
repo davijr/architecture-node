@@ -19,9 +19,9 @@
     "baseUrl": ".",
     "paths": {
       "@config/*": ["./src/config/*"],
-      "@model/*": ["./src/model/*"],
-      "@route/*": ["./src/route/*"],
-      "@service/*": ["./src/service/*"]
+      "@models/*": ["./src/models/*"],
+      "@routes/*": ["./src/routes/*"],
+      "@services/*": ["./src/services/*"]
     }
   },
   "include": ["src/**/*"],

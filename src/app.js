@@ -2,17 +2,17 @@ import '@config/environment'
 import logger from '@config/logger'
 
 import database from '@config/database'
-import User from '@model/User'
-import TabelaTeste from '@model/TabelaTeste'
+import User from '@models/User'
+// import TabelaTeste from '@model/TabelaTeste'
 
 import express from 'express'
-import mountRoutes from '@routes/routes'
+import mountRoutes from './routes'
 
 (async () => {
   try {
     const resultado = await database.sync()
     logger.info('chegou aqui')
-    // logger.info(resultado);
+    logger.info(await User.findAll())
   } catch (error) {
     logger.error(error)
   }
