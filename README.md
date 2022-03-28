@@ -1,5 +1,5 @@
-# Node Architecture
-Initial Node Architecture
+# Node.js Architecture
+Initial Node.js Architecture
 
 ## Functional Requirements 🌟
 [ ] Clean Architecture
@@ -14,18 +14,18 @@ Initial Node Architecture
 [ ] Shell scripts for creation with custom params/options
 
 ## Non-Funtional Requirements 🌟
-[ ] Postgres Integration (Sequelize && pg)
-- [ ] (DEV) Docker Image for local tests
+[x] Postgres Integration (Sequelize && pg)
+- [x] (DEV) Docker Image for local tests
 [ ] AD Integration
-[ ] Express
-[ ] dotenv
-[ ] (DEV) Typescript
-[ ] (DEV) eslint
-- [ ] (DEV) eslint extension on VS Code
-[ ] (DEV) Sucrase
-[ ] (DEV) Nodemon - Live reload
-[ ] (DEV) Pino - Logger
-[ ] (TEST) Jest
+[x] Express
+[x] dotenv
+[x] (DEV) Typescript
+[x] (DEV) eslint
+- [x] (DEV) eslint extension on VS Code
+[x] (DEV) Sucrase
+[x] (DEV) Nodemon - Live reload
+[x] (DEV) Pino - Logger
+[x] (TEST) Jest
 - [ ] 100% Coverage
 - [ ] All Tests OK
 
