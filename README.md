@@ -1,5 +1,5 @@
-# Node Architecture
-Initial Node Architecture
+# Node.js Architecture
+Initial Node.js Architecture
 
 ## Functional Requirements 🌟
 [ ] Clean Architecture
