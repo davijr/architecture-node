@@ -1,9 +1,6 @@
-import User from '@model/User'
+import User from '@models/User'
 
 test('it should ve ok', () => {
-  const user = new User()
-
-  user.name = 'Diego'
-
-  expect(user.name).toEqual('Diego')
+  const user = User.build({ name: 'John', email: 'john@test.com' })
+  expect(user.get('name')).toEqual('John')
 })

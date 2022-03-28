@@ -1,4 +1,4 @@
-import app from './app.js'
+import app from './app'
 import logger from '@config/logger'
 
 const port = process.env.PORT || 3000

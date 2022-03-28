@@ -10,7 +10,7 @@ import mountRoutes from './routes'
 
 (async () => {
   try {
-    const resultado = await database.sync()
+    await database.sync()
     logger.info('chegou aqui')
     logger.info(await User.findAll())
   } catch (error) {
