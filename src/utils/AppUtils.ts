@@ -11,12 +11,18 @@ export class AppUtils {
 
   public static isDBShowSQL (): boolean {
     const showSqlQuery = ''.concat(process.env.DB_SHOW_SQL as string).trim()
-    return JSON.parse(showSqlQuery)
+    if (showSqlQuery) {
+      return true
+    }
+    return false
   }
 
   public static isDBSync (): boolean {
-    const showSqlQuery = ''.concat(process.env.DB_SYNC as string).trim()
-    return JSON.parse(showSqlQuery)
+    const dbSync = ''.concat(process.env.DB_SYNC as string).trim()
+    if (dbSync) {
+      return true
+    }
+    return false
   }
 
   public static sleep (seconds: number) {
