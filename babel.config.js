@@ -8,15 +8,20 @@ module.exports = {
         }
       }
     ],
-    '@babel/preset-typescript'
+    [
+      '@babel/preset-typescript',
+      {
+        allowDeclareFields: true
+      }
+    ]
   ],
   plugins: [
     ['module-resolver', {
       alias: {
         '@config': './src/config',
-        '@model': './src/model',
+        '@models': './src/models',
         '@routes': './src/routes',
-        '@service': './src/service'
+        '@services': './src/services'
       }
     }]
   ],

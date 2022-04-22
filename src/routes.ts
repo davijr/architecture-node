@@ -1,5 +1,7 @@
-import livros from '@routes/livro'
+import editionRoutes from '@routes/editionRoutes'
 
-export default (app) => {
-  app.use('/livro', livros)
+const BASE_URL = '/api'
+
+export default (app: any) => {
+  app.use(`${BASE_URL}/edition`, editionRoutes)
 }

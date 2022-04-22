@@ -1,12 +1,12 @@
-import User from '@model/User'
+import User from '@models/User'
 
 export class UserService {
-  get (user) {
+  get (user: any) {
     if (!user) { return User.findAll() }
     return User.create(user)
   }
 
-  create (user) {
+  create (user: any) {
     return User.create(user)
   }
 }

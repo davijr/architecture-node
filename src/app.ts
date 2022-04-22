@@ -1,24 +1,23 @@
 import '@config/environment'
+import { database } from '@config/database'
 import logger from '@config/logger'
-
-import database from '@config/database'
-import User from '@models/User'
-// import TabelaTeste from '@model/TabelaTeste'
-
+import bodyParser from 'body-parser'
 import express from 'express'
+import { AppUtils } from './utils/AppUtils'
 import mountRoutes from './routes'
 
 (async () => {
   try {
-    await database.sync()
-    logger.info('chegou aqui')
-    logger.info(await User.findAll())
+    if (AppUtils.isDBSync()) {
+      await database.sync()
+    }
   } catch (error) {
     logger.error(error)
   }
 })()
 
 const app = express()
+app.use(bodyParser.json())
 mountRoutes(app)
 
 export default app
