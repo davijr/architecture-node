@@ -2,7 +2,6 @@ import logger from '@config/logger'
 import { ModelUtils } from '@models/utils/ModelUtils'
 import { EditionService } from '@services/EditionService'
 import express from 'express'
-import { AppUtils } from '@utils/AppUtils'
 
 const editionRoutes = express.Router()
 const editionService = new EditionService()
@@ -11,8 +10,6 @@ editionRoutes.get('/:model', async (req: any, res: any) => {
   const modelName = req.params.model
   const model = ModelUtils.getInstance(modelName)
   logger.info('GET /' + req.params?.model)
-  // TODO remove
-  await AppUtils.sleep(5)
   res.status(200).json(await editionService.find({ model, searchOptions: req.query }))
 })
 
