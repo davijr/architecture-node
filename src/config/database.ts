@@ -2,7 +2,7 @@ import { Sequelize } from 'sequelize'
 import logger from '@config/logger'
 import path from 'path'
 import fs from 'fs'
-import { AppUtils } from 'src/utils/AppUtils'
+import { AppUtils } from '@utils/AppUtils'
 
 // TODO leitura de certificados deve ser via Cloud Storage
 

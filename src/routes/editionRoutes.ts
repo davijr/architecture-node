@@ -2,7 +2,7 @@ import logger from '@config/logger'
 import { ModelUtils } from '@models/utils/ModelUtils'
 import { EditionService } from '@services/EditionService'
 import express from 'express'
-import { AppUtils } from 'src/utils/AppUtils'
+import { AppUtils } from '@utils/AppUtils'
 
 const editionRoutes = express.Router()
 const editionService = new EditionService()
