@@ -5,6 +5,7 @@ import bodyParser from 'body-parser'
 import express from 'express'
 import { AppUtils } from '@utils/AppUtils'
 import mountRoutes from './routes'
+import httpHeader from './middleware/http.middleware'
 
 (async () => {
   try {
@@ -18,6 +19,7 @@ import mountRoutes from './routes'
 
 const app = express()
 app.use(bodyParser.json())
+app.use(httpHeader)
 mountRoutes(app)
 
 export default app

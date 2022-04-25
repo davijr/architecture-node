@@ -15,7 +15,7 @@ const connectionOptions: any = {
   port: process.env.PGPORT
 }
 
-if (AppUtils.isDevEnvironment() && AppUtils.isDBShowSQL()) {
+if (AppUtils.isLocalEnvironment() && AppUtils.isDBShowSQL()) {
   connectionOptions.logging = (msg: any) => logger.info(msg)
 } else {
   const rootCas = require('ssl-root-cas').create()
