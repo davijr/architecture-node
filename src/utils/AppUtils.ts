@@ -4,14 +4,14 @@ export class AppUtils {
     return 'nothing'
   }
 
-  public static isDevEnvironment (): boolean {
+  public static isLocalEnvironment (): boolean {
     const env = ''.concat(process.env.NODE_ENV as string).trim()
-    return env === 'dev'
+    return env === 'local'
   }
 
   public static isDBShowSQL (): boolean {
     const showSqlQuery = ''.concat(process.env.DB_SHOW_SQL as string).trim()
-    if (showSqlQuery) {
+    if (showSqlQuery === 'true') {
       return true
     }
     return false
@@ -19,7 +19,7 @@ export class AppUtils {
 
   public static isDBSync (): boolean {
     const dbSync = ''.concat(process.env.DB_SYNC as string).trim()
-    if (dbSync) {
+    if (dbSync === 'true') {
       return true
     }
     return false
