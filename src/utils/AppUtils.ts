@@ -25,6 +25,14 @@ export class AppUtils {
     return false
   }
 
+  public static isUseTunnel (): boolean {
+    const useTunnel = ''.concat(process.env.USE_TUNNEL as string).trim()
+    if (useTunnel === 'true') {
+      return true
+    }
+    return false
+  }
+
   public static sleep (seconds: number) {
     return new Promise((resolve) => {
       setTimeout(resolve, seconds * 1000)
