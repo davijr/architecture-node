@@ -5,6 +5,9 @@ import ResponseModel from '@models/utils/ResponseModel'
 export class EditionService {
   async find (requestModel: RequestModel): Promise<ResponseModel> {
     try {
+      if (!requestModel.model) {
+        throw new Error('Model can not be undefined')
+      }
       if (!requestModel.data) {
         const searchOptions = {
           order: [[requestModel.searchOptions?.orderBy || requestModel.model.idField, requestModel.searchOptions?.order || 'asc']],

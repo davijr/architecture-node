@@ -9,12 +9,12 @@ class SysUnderlyingType extends Model {
 }
 
 SysUnderlyingType.init({
-  underlyingType: { // UNDERLYING_TYPE
+  underlyingType: {
     type: DataTypes.STRING(3),
     primaryKey: true,
     allowNull: false
   },
-  underlyingTypeDescription: { // UNDERLYING_TYPE_DESCRIPTION
+  underlyingTypeDescription: {
     type: DataTypes.STRING(100)
   }
 }, {
