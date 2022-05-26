@@ -40,4 +40,24 @@ PGDATABASE=<database>
 PGPORT=<port>
 
 
+### Command to generate models
+
+  npm i -D sequelize-auto
+  sequelize-auto -h <host> -d <database> -u <user> -x [password] -p [port]  --dialect [dialect] -c [/path/to/config] -o [/path/to/models] -t [tableName]
+
+* The one used in local environment:
+
+  npx sequelize-auto -h localhost -d postgres -u postgres -x 12345 -p 5432 -s bzdf --dialect postgres -o ./src/models/generated --caseModel p --caseProp c --caseFile p --lang ts
+
+### Local Environment Common Erros
+
+* Error mkdir /host_mnt/c: file exists when restarting docker container with mount #1560
+
+  // TODO
+  https://linuxtut.com/en/579ab597e4015b9f19fe/
+
+
+
+
+
 

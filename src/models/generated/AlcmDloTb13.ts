@@ -1,0 +1,62 @@
+import * as Sequelize from 'sequelize';
+import { DataTypes, Model, Optional } from 'sequelize';
+
+export interface AlcmDloTb13Attributes {
+  dloDomain: string;
+  dloDomainDescription: string;
+  dloDomainInitialDate: string;
+  dloDomainEndDate?: string;
+}
+
+export type AlcmDloTb13Pk = "dloDomain";
+export type AlcmDloTb13Id = AlcmDloTb13[AlcmDloTb13Pk];
+export type AlcmDloTb13OptionalAttributes = "dloDomainEndDate";
+export type AlcmDloTb13CreationAttributes = Optional<AlcmDloTb13Attributes, AlcmDloTb13OptionalAttributes>;
+
+export class AlcmDloTb13 extends Model<AlcmDloTb13Attributes, AlcmDloTb13CreationAttributes> implements AlcmDloTb13Attributes {
+  dloDomain!: string;
+  dloDomainDescription!: string;
+  dloDomainInitialDate!: string;
+  dloDomainEndDate?: string;
+
+
+  static initModel(sequelize: Sequelize.Sequelize): typeof AlcmDloTb13 {
+    return AlcmDloTb13.init({
+    dloDomain: {
+      type: DataTypes.STRING(3),
+      allowNull: false,
+      primaryKey: true,
+      field: 'dlo_domain'
+    },
+    dloDomainDescription: {
+      type: DataTypes.STRING(1000),
+      allowNull: false,
+      field: 'dlo_domain_description'
+    },
+    dloDomainInitialDate: {
+      type: DataTypes.DATEONLY,
+      allowNull: false,
+      field: 'dlo_domain_initial_date'
+    },
+    dloDomainEndDate: {
+      type: DataTypes.DATEONLY,
+      allowNull: true,
+      field: 'dlo_domain_end_date'
+    }
+  }, {
+    sequelize,
+    tableName: 'alcm_dlo_tb13',
+    schema: 'bzdf',
+    timestamps: false,
+    indexes: [
+      {
+        name: "PK-ALCM_DLO_TB13",
+        unique: true,
+        fields: [
+          { name: "dlo_domain" },
+        ]
+      },
+    ]
+  });
+  }
+}
