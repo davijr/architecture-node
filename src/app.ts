@@ -1,14 +1,16 @@
-import '@config/environment'
 import { database } from '@config/database'
+import '@config/environment'
 import logger from '@config/logger'
+import { initModels } from '@models/generated/initModels'
+import { AppUtils } from '@utils/AppUtils'
 import bodyParser from 'body-parser'
 import express from 'express'
-import { AppUtils } from '@utils/AppUtils'
-import mountRoutes from './routes'
 import httpHeader from './middleware/http.middleware'
+import mountRoutes from './routes'
 
 (async () => {
   try {
+    initModels(database)
     if (AppUtils.isDBSync()) {
       await database.sync()
     }

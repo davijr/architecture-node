@@ -86,7 +86,8 @@ const globalInitAttributes = {
   schema: process.env.PGSCHEMA || 'public',
   freezeTableName: true,
   underscored: true,
-  timestamps: false
+  timestamps: false,
+  paranoid: true
 }
 
 export {
