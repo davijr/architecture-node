@@ -33,6 +33,14 @@ export class AppUtils {
     return false
   }
 
+  public static isUseSSL (): boolean {
+    const useSSL = ''.concat(process.env.USE_SSL as string).trim()
+    if (useSSL === 'false') {
+      return false
+    }
+    return true
+  }
+
   public static sleep (seconds: number) {
     return new Promise((resolve) => {
       setTimeout(resolve, seconds * 1000)

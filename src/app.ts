@@ -1,5 +1,5 @@
-import { database } from '@config/database'
 import '@config/environment'
+import { database } from '@config/database'
 import logger from '@config/logger'
 import { initModels } from '@models/generated/initModels'
 import { AppUtils } from '@utils/AppUtils'

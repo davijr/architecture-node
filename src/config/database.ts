@@ -4,7 +4,13 @@ import path from 'path'
 import fs from 'fs'
 import { AppUtils } from '@utils/AppUtils'
 
-// TODO Leitura de certificados deve ser via Cloud Storage
+const globalInitAttributes: any = {
+  schema: process.env.PGSCHEMA || 'public',
+  freezeTableName: true,
+  underscored: true,
+  timestamps: false,
+  paranoid: true
+}
 
 const connectionOptions: any = {
   dialect: 'postgres',
@@ -19,22 +25,24 @@ if (AppUtils.isDBShowSQL()) {
   connectionOptions.logging = (msg: any) => logger.info(msg)
 }
 
-const rootCas = require('ssl-root-cas').create()
-rootCas.addFile(path.join(__dirname, 'postgresql_dev.pem'))
-// other params
-connectionOptions.logging = false
-connectionOptions.dialectOptions = {
-  ssl: {
-    rejectUnauthorized: false,
-    ca: fs.readFileSync(path.join(__dirname, 'root_dev.crt')).toString(),
-    key: fs.readFileSync(path.join(__dirname, 'postgresql_dev.key')).toString(),
-    cert: fs.readFileSync(path.join(__dirname, 'postgresql_dev.crt')).toString()
+// TODO Leitura de certificados deve ser via Cloud Storage
+if (AppUtils.isUseSSL()) {
+  const rootCas = require('ssl-root-cas').create()
+  rootCas.addFile(path.join(__dirname, 'postgresql_dev.pem'))
+  connectionOptions.dialectOptions = {
+    ssl: {
+      rejectUnauthorized: false,
+      ca: fs.readFileSync(path.join(__dirname, 'root_dev.crt')).toString(),
+      key: fs.readFileSync(path.join(__dirname, 'postgresql_dev.key')).toString(),
+      cert: fs.readFileSync(path.join(__dirname, 'postgresql_dev.crt')).toString()
+    }
   }
 }
 
+connectionOptions.schema = process.env.PGSCHEMA || 'public'
+
 const database = new Sequelize(connectionOptions)
 
-// if local use tunnel-ssh
 if (AppUtils.isUseTunnel()) {
   console.log('start tunnel')
   const tunnel = require('tunnel-ssh')
@@ -81,14 +89,7 @@ if (AppUtils.isUseTunnel()) {
   })
 }
 
-const globalInitAttributes = {
-  sequelize: database,
-  schema: process.env.PGSCHEMA || 'public',
-  freezeTableName: true,
-  underscored: true,
-  timestamps: false,
-  paranoid: true
-}
+globalInitAttributes.sequelize = database
 
 export {
   database,
