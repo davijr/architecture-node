@@ -1,7 +1,12 @@
+import ResponseModel from '@models/utils/ResponseModel'
+import { AppUtils } from '@utils/AppUtils'
 import { NextFunction, Request, Response } from 'express'
+import jwt from 'jsonwebtoken'
 
 // Add headers before the routes are defined
-function httpHeader (req: Request, res: Response, next: NextFunction) {
+function httpMiddleware (req: Request | any, res: Response, next: NextFunction) {
+  const authHeader = req.headers.authorization
+
   // Website you wish to allow to connect
   res.setHeader('Access-Control-Allow-Origin', '*')
 
@@ -15,8 +20,31 @@ function httpHeader (req: Request, res: Response, next: NextFunction) {
   // to the API (e.g. in case you use sessions)
   res.setHeader('Access-Control-Allow-Credentials', 'true')
 
-  // Pass to next layer of middleware
-  next()
+  // JWT validation
+  if (!authHeader) {
+    return res.status(401).send(new ResponseModel('auth', 'No token provided.', null))
+  }
+
+  const parts = authHeader.split(' ')
+
+  if (parts.length !== 2) {
+    return res.status(401).send(new ResponseModel('auth', 'Badly formatted token.', null))
+  }
+
+  const [scheme, token] = parts
+
+  if (!/^Bearer$/i.test(scheme)) {
+    return res.status(401).send(new ResponseModel('auth', 'Badly formatted token.', null))
+  }
+
+  jwt.verify(token, AppUtils.getJwtSecret(), (error: any, decoded: any) => {
+    if (error) {
+      return res.status(401).send(new ResponseModel('auth', 'Invalid token.', null))
+    }
+
+    req.userId = decoded.id
+    return next()
+  })
 }
 
-export default httpHeader
+export default httpMiddleware

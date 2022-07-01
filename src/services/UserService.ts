@@ -2,24 +2,33 @@ import logger from '@config/logger'
 import User from '@models/User'
 import RequestModel from '@models/utils/RequestModel'
 import ResponseModel from '@models/utils/ResponseModel'
-import { hash } from 'bcryptjs'
 
 export class UserService {
-  get (user: User) {
-    if (!user) {
-      return User.findAll()
+  async get (username: string) {
+    if (!username) {
+      return User.findAll({
+        attributes: {
+          exclude: ['password']
+        }
+      })
     }
     return User.findAll({
-      where: { username: user.username }
+      where: { username },
+      attributes: {
+        exclude: ['password']
+      }
+    })
+  }
+
+  async getUserAuth (username: string) {
+    return User.findOne({
+      where: { username }
     })
   }
 
   async create (requestModel: RequestModel) {
     const user = requestModel.data
-    user.password = await hash(user.password, 8)
-    return User.create({
-      user
-    })
+    return User.create(user)
   }
 
   async delete (requestModel: RequestModel): Promise<ResponseModel> {
@@ -35,10 +44,10 @@ export class UserService {
       }, (err: any) => {
         logger.error(err)
       })
-      return { message }
+      return new ResponseModel('user', message, null)
     } catch (e) {
       logger.error(e)
-      return { message }
+      return new ResponseModel('user', message, null)
     }
   }
 }

@@ -9,7 +9,7 @@ export class EditionService {
     try {
       requestModel.model = database.model(requestModel.model)
       if (!requestModel.model) {
-        throw new Error('Model can not be undefined')
+        throw new ResponseModel(requestModel.model, 'Model can not be undefined.', null)
       }
       if (!requestModel.data) {
         const searchOptions = {
@@ -17,36 +17,31 @@ export class EditionService {
           limit: requestModel.searchOptions?.limit,
           offset: requestModel.searchOptions?.page
         }
-        return {
-          data: await (requestModel.model as any).findAll({}),
-          message: 'Search completed successfully'
-        }
+        return new ResponseModel(requestModel.model, 'Search completed successfully.',
+          await (requestModel.model as any).findAll({}))
       }
-      return {
-        data: await (requestModel.model as any).findOne({ where: requestModel.data }),
-        message: 'Search completed successfully'
-      }
-    } catch (e) {
-      logger.error(e)
-      throw new Error('Search was finished with error')
+      return new ResponseModel(requestModel.model, 'Search completed successfully.',
+        await (requestModel.model as any).findOne({ where: requestModel.data }))
+    } catch (error: any) {
+      logger.error(error)
+      throw new ResponseModel(requestModel.model, `Search was finished with error. (${error.message})`, null)
     }
   }
 
   async create (requestModel: RequestModel): Promise<ResponseModel> {
     try {
-      return {
-        data: await (requestModel.model as any).create(requestModel.data),
-        message: 'Insert completed successfully'
-      }
-    } catch (e) {
-      logger.error(e)
-      throw new Error('Insert was finished with error')
+      requestModel.model = database.model(requestModel.model)
+      return new ResponseModel(requestModel.model, 'Insert completed successfully.', await (requestModel.model as any).create(requestModel.data))
+    } catch (error: any) {
+      logger.error(error)
+      throw new ResponseModel(requestModel.model, `Insert was finished with error. (${error.message})`, null)
     }
   }
 
   async update (requestModel: RequestModel): Promise<ResponseModel> {
     let message = 'Update was finished with error'
     try {
+      requestModel.model = database.model(requestModel.model)
       const criteria: any = {}
       criteria[requestModel.model.primaryKeyAttribute] = requestModel.data[requestModel.model.primaryKeyAttribute]
       await (requestModel.model as any).update(requestModel.data, {
@@ -58,22 +53,23 @@ export class EditionService {
           logger.info(message)
         } else {
           logger.error(message)
-          throw new Error(message)
+          throw new ResponseModel(requestModel.model, `${message}`, null)
         }
         return { message }
       }, (error: any) => {
         logger.error(error)
-        throw new Error(error)
+        throw new ResponseModel(requestModel.model, `${message} (${error.message})`, null)
       })
-      return { message }
-    } catch (e) {
-      logger.error(e)
-      throw new Error(message)
+      return new ResponseModel(requestModel.model, message, null)
+    } catch (error: any) {
+      logger.error(error)
+      throw new ResponseModel(requestModel.model, `${message} (${error.message})`, null)
     }
   }
 
   async delete (requestModel: RequestModel): Promise<ResponseModel> {
     let message = 'Delete was ended with error'
+    requestModel.model = database.model(requestModel.model)
     try {
       const criteria: any = {}
       criteria[requestModel.model.primaryKeyField] = requestModel.data
@@ -83,12 +79,12 @@ export class EditionService {
           logger.info(message)
         }
       }, (error: any) => {
-        throw new Error(error)
+        throw new ResponseModel(requestModel.model, `${message} (${error.message})`, null)
       })
-      return { message }
-    } catch (e) {
-      logger.error(e)
-      throw new Error(message)
+      return new ResponseModel(requestModel.model, message, null)
+    } catch (error: any) {
+      logger.error(error)
+      throw new ResponseModel(requestModel.model, `${message} (${error.message})`, null)
     }
   }
 

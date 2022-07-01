@@ -41,6 +41,14 @@ export class AppUtils {
     return true
   }
 
+  public static getJwtSecret (): string {
+    return ''.concat(process.env.JWT_SECRET as string).trim()
+  }
+
+  public static getJwtTokenExpiration (): number {
+    return parseInt(''.concat(process.env.JWT_EXPIRATION as string).trim())
+  }
+
   public static sleep (seconds: number) {
     return new Promise((resolve) => {
       setTimeout(resolve, seconds * 1000)
