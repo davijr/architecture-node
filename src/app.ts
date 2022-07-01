@@ -5,14 +5,16 @@ import { initModels } from '@models/generated/initModels'
 import { AppUtils } from '@utils/AppUtils'
 import bodyParser from 'body-parser'
 import express from 'express'
-import httpHeader from './middleware/http.middleware'
 import mountRoutes from './routes'
+import User from '@models/User'
 
 (async () => {
   try {
     initModels(database)
     if (AppUtils.isDBSync()) {
       await database.sync()
+    } else {
+      await User.sync()
     }
   } catch (error) {
     logger.error(error)
@@ -21,7 +23,6 @@ import mountRoutes from './routes'
 
 const app = express()
 app.use(bodyParser.json())
-app.use(httpHeader)
 mountRoutes(app)
 
 export default app

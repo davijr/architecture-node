@@ -1,18 +1,21 @@
 import * as Sequelize from 'sequelize'
 import { Model } from 'sequelize'
-import { globalInitAttributes } from '../config/database.js'
+import { globalInitAttributes } from '@config/database'
+import bcrypt from 'bcryptjs'
 
 class User extends Model {
-  declare id: string
+  declare id: number
   declare username: string
   declare password: string
+  declare email: string
   declare firstName: string
   declare lastName: string
 }
 
 User.init({
   id: {
-    type: Sequelize.UUID,
+    type: Sequelize.INTEGER,
+    autoIncrement: true,
     allowNull: false,
     primaryKey: true
   },
@@ -23,7 +26,10 @@ User.init({
   },
   password: {
     type: Sequelize.STRING,
-    allowNull: false,
+    allowNull: false
+  },
+  email: {
+    type: Sequelize.STRING,
     unique: true
   },
   firstName: {
@@ -34,7 +40,12 @@ User.init({
     type: Sequelize.STRING
   }
 }, {
-  ...globalInitAttributes
+  ...globalInitAttributes,
+  tableName: 'user'
+})
+
+User.beforeSave(async (user, options) => {
+  user.password = await bcrypt.hash(user.password, 10)
 })
 
 export default User
