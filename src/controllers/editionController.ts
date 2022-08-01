@@ -24,8 +24,8 @@ editionRoutes.get('/model/:model', async (req: any, res: any) => {
 
 editionRoutes.get('/model/:model/:param', async (req: any, res: any) => {
   const modelName = req.params.model
-  const params = req.params
-  logger.info(`GET /model/${modelName}/${params}`)
+  const params = req.query
+  logger.info(`GET /model/${modelName}/${JSON.stringify(params)}`)
   res.status(200).json(await editionService.find({ model: modelName, data: params }))
 })
 
@@ -42,11 +42,10 @@ editionRoutes.get('/menu-options', async (req: any, res: any) => {
 
 editionRoutes.post('/model/:model/search', async (req: any, res: any) => {
   const modelName = req.params.model
-  const searchOptions = req.params.searchOptions
-  logger.info(' /model/:model/search')
-  logger.info(`POST /model/${modelName}/${searchOptions}`)
+  const searchOptions = req.query
+  logger.info(`POST /model/${modelName}/search`)
   try {
-    res.status(200).json(await editionService.find({ model: modelName, data: searchOptions }))
+    res.status(200).json(await editionService.search({ model: modelName, data: req.body, searchOptions }))
   } catch (error) {
     return res.status(400).json(error)
   }

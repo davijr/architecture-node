@@ -4,6 +4,7 @@ import { ModelUtils } from '@models/utils/ModelUtils'
 import RequestModel from '@models/utils/RequestModel'
 import ResponseModel from '@models/utils/ResponseModel'
 import { AppUtils } from '@utils/AppUtils'
+import { Op } from 'sequelize'
 
 export class EditionService {
   async find (requestModel: RequestModel): Promise<ResponseModel> {
@@ -12,17 +13,37 @@ export class EditionService {
       if (!requestModel.model) {
         throw new ResponseModel(requestModel.model, 'Model can not be undefined.', null)
       }
-      if (!requestModel.data) {
-        const searchOptions = {
-          order: [[requestModel.searchOptions?.orderBy || requestModel.model.primaryKeyField, requestModel.searchOptions?.order || 'asc']],
-          limit: requestModel.searchOptions?.limit,
-          offset: requestModel.searchOptions?.page
-        }
+      if (!requestModel.searchOptions) {
         return new ResponseModel(requestModel.model, 'Search completed successfully.',
           await (requestModel.model as any).findAll({}))
       }
       return new ResponseModel(requestModel.model, 'Search completed successfully.',
-        await (requestModel.model as any).findOne({ where: requestModel.data }))
+        await (requestModel.model as any).findAll({ where: this.buildLikeSearch(requestModel.searchOptions) }))
+    } catch (error: any) {
+      logger.error(error)
+      throw new ResponseModel(requestModel.model, `Search was finished with error. (${error.message})`, null)
+    }
+  }
+
+  async search (requestModel: RequestModel) {
+    try {
+      requestModel.model = database.model(requestModel.model)
+      if (!requestModel.searchOptions) {
+        return new ResponseModel(requestModel.model, 'Search completed successfully.',
+          await (requestModel.model as any).findAll({
+            where: {
+              [Op.or]: [this.buildLikeSearch(requestModel.data)]
+            }
+          }))
+      } else {
+        return new ResponseModel(requestModel.model, 'Search completed successfully.',
+          await (requestModel.model as any).findAll({
+            where: {
+              [Op.or]: this.buildLikeSearch(requestModel.data)
+            },
+            ...requestModel.searchOptions
+          }))
+      }
     } catch (error: any) {
       logger.error(error)
       throw new ResponseModel(requestModel.model, `Search was finished with error. (${error.message})`, null)
@@ -33,6 +54,26 @@ export class EditionService {
     try {
       requestModel.model = database.model(requestModel.model)
       return new ResponseModel(requestModel.model, 'Insert completed successfully.', await (requestModel.model as any).create(requestModel.data))
+    } catch (error: any) {
+      logger.error(error)
+      throw new ResponseModel(requestModel.model, `Insert was finished with error. (${error.message})`, null)
+    }
+  }
+
+  async createTransaction (requestModel: RequestModel, transaction: any): Promise<ResponseModel> {
+    try {
+      requestModel.model = database.model(requestModel.model)
+      return new ResponseModel(requestModel.model, 'Insert completed successfully.', await (requestModel.model as any).create(requestModel.data, { transaction }))
+    } catch (error: any) {
+      logger.error(error)
+      throw new ResponseModel(requestModel.model, `Insert was finished with error. (${error.message})`, null)
+    }
+  }
+
+  async bulkCreateTransaction (requestModel: RequestModel, transaction: any): Promise<ResponseModel> {
+    try {
+      requestModel.model = database.model(requestModel.model)
+      return new ResponseModel(requestModel.model, 'Insert completed successfully.', await (requestModel.model as any).bulkCreate(requestModel.data, { transaction }))
     } catch (error: any) {
       logger.error(error)
       throw new ResponseModel(requestModel.model, `Insert was finished with error. (${error.message})`, null)
@@ -146,7 +187,19 @@ export class EditionService {
   }
 
   async getAttributes (modelName: string) {
-    const modelObject = database.model(modelName)
-    return ModelUtils.transformModel(modelName, modelObject)
+    try {
+      const modelObject = database.model(modelName)
+      return ModelUtils.transformModel(modelName, modelObject)
+    } catch (e) {
+      return new Error('Model "' + modelName + '" has not been defined.')
+    }
+  }
+
+  private buildLikeSearch (searchOptions: any) {
+    const queryVariables: any = {}
+    Object.keys(searchOptions).forEach(key => {
+      queryVariables[key] = { [Op.iLike]: `%${searchOptions[key]}%` }
+    })
+    return queryVariables
   }
 }
