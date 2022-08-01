@@ -41,7 +41,7 @@ User.init({
   }
 }, {
   ...globalInitAttributes,
-  tableName: 'user'
+  tableName: 'frontend_user'
 })
 
 User.beforeSave(async (user, options) => {
