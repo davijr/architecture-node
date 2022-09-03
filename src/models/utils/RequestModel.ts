@@ -5,6 +5,7 @@ interface RequestModel {
     model?: Model | any,
     searchOptions?: SearchOptions
     data?: any
+    transaction?: any
 }
 
 export default RequestModel

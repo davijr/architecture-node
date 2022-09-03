@@ -53,6 +53,9 @@ export class EditionService {
   async create (requestModel: RequestModel): Promise<ResponseModel> {
     try {
       requestModel.model = database.model(requestModel.model)
+      if (requestModel.transaction) {
+        return new ResponseModel(requestModel.model, 'Insert completed successfully.', await (requestModel.model as any).create(requestModel.data, requestModel.transaction))
+      }
       return new ResponseModel(requestModel.model, 'Insert completed successfully.', await (requestModel.model as any).create(requestModel.data))
     } catch (error: any) {
       logger.error(error)
