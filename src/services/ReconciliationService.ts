@@ -47,51 +47,55 @@ export class ReconciliationService {
     }
   }
 
-  async create (reconDimensionGroup: any) {
-    // try {
-    //   requestModel.model = database.model(requestModel.model)
-    //   return new ResponseModel(requestModel.model, 'Insert completed successfully.', await (requestModel.model as any).create(requestModel.data))
-    // } catch (error: any) {
-    //   logger.error(error)
-    //   throw new ResponseModel(requestModel.model, `Insert was finished with error. (${error.message})`, null)
-    // }
+  async create (reconDimensionGroupParam: any) {
+    let result: any
+    const transaction = await database.transaction()
     try {
-      return await database.transaction(async (transaction) => {
-        const result: any = {}
-        result.reconDimensionGroup = await this.createNested('ReconDimensionGroup', 'reconDimensionGroup', transaction)
-        // attribute new ID for each reconGlPoint
-        reconDimensionGroup.reconGlPoints.forEach((i: any) => {
-          i.reconDimensionGroup = result.reconDimensionGroup.reconDimensionGroup
-        })
-        result.reconGlPoints = await this.editionService.bulkCreateTransaction({
-          model: 'ReconGlPoint',
-          data: {
-            reconGlPointId: null,
-            ...reconDimensionGroup.reconGlPoints
-          }
-        }, transaction)
-        reconDimensionGroup.reconDimension.reconDimensionId = result.reconGlPoints.reconDimensionId
-        // for each recon dimension
-        result.reconDimensions = await this.editionService.bulkCreateTransaction({ model: 'ReconDimension', data: reconDimensionGroup.reconDimensions }, transaction)
-        return result
-        // const newReconDimension: any = editionService.bulkCreateTransaction({ model: 'ReconDimension', data: reconDimensionGroup.reconDimension }, transaction)
-        // reconDimensionGroup.reconBzdfPoint.reconDimensionId = newReconDimension.reconDimensionId
-        // editionService.bulkCreateTransaction({ model: 'ReconBzdfPoint', data: reconDimensionGroup.reconBzdfPoint }, transaction)
+      // 1º ReconDimensionGroup
+      const reconDimensionGroupModel = database.model('ReconDimensionGroup')
+      result = await reconDimensionGroupModel.create({}, { transaction })
+      reconDimensionGroupParam.reconDimensionGroup = result.reconDimensionGroup
+      // 2º ReconGlPoints
+      const reconGlPointModel = database.model('ReconGlPoint')
+      result.reconGlPoints = await reconGlPointModel.bulkCreate(this.transformReconGlPoints(reconDimensionGroupParam), { transaction })
+      // 3º ReconDimensions and children ReconBzdfPoints
+      const reconDimensionModel = database.model('ReconDimension')
+      result.reconDimensions = await reconDimensionModel.bulkCreate(this.transformReconDimensions(reconDimensionGroupParam), {
+        include: [{ association: 'reconBzdfPoints' }],
+        transaction
       })
-    } catch (error: any) {
-      throw new Error(error)
+      transaction.commit()
+      return result
+    } catch (error) {
+      logger.error(error)
+      await transaction.rollback()
     }
   }
 
-  async createNested (modelName: string, idField: string, transaction: any) {
-    try {
-      const model = database.model(modelName)
-      const lastId: any = await model.max(idField)
-      return await model.create({ reconDimensionGroup: lastId + 1 }, transaction)
-    } catch (error: any) {
-      logger.error(error)
-      throw new Error(`Insert was finished with error. (${error.message})`)
-    }
+  private transformReconGlPoints (reconDimensionGroupParam: any) {
+    return reconDimensionGroupParam.reconGlPoints.map((i: any) => {
+      return {
+        reconDimensionGroup: reconDimensionGroupParam.reconDimensionGroup,
+        glAccountCode: i.glAccountCode
+      }
+    })
+  }
+
+  private transformReconDimensions (reconDimensionGroupParam: any) {
+    return reconDimensionGroupParam.reconDimensions.map((reconDimensionParam: any) => {
+      return {
+        reconDimensionGroup: reconDimensionGroupParam.reconDimensionGroup,
+        reconMetricId: reconDimensionParam.reconMetricId,
+        productCode: reconDimensionParam.productCode,
+        glClass: reconDimensionParam.glClass,
+        reconBzdfPoints: reconDimensionParam.reconBzdfPoints.map((reconBzdfPoint: any) => {
+          return {
+            reconBzdfMapId: reconBzdfPoint.reconBzdfMapId,
+            mathOperatorId: reconBzdfPoint.mathOperatorId
+          }
+        })
+      }
+    })
   }
 
   async update (requestModel: RequestModel): Promise<ResponseModel> {
@@ -125,11 +129,28 @@ export class ReconciliationService {
 
   async delete (requestModel: RequestModel): Promise<ResponseModel> {
     let message = 'Delete was ended with error'
+    const transaction = await database.transaction()
     requestModel.model = database.model(requestModel.model)
     try {
-      const criteria: any = {}
-      criteria[requestModel.model.primaryKeyField] = requestModel.data
-      await (requestModel.model as any).destroy({ where: criteria }).then((rowDeleted: number) => { // rowDeleted will return number of rows deleted
+      // 1º get children
+      const reconDimensionGroup = await requestModel.model.findOne({
+        where: { reconDimensionGroup: requestModel.data },
+        include: ['reconGlPoints', 'reconDimensions'],
+        transaction
+      })
+      // 2º destroy reconGlPoints
+      const reconGlPointModel = database.model('ReconGlPoint')
+      await reconGlPointModel.destroy({ where: { reconDimensionGroup: requestModel.data }, transaction })
+      // 3º destroy reconBzdfPoints
+      const reconBzdfPointModel = database.model('ReconBzdfPoint')
+      reconDimensionGroup.reconDimensions.forEach(async (reconDimension: any) => {
+        await reconBzdfPointModel.destroy({ where: { reconDimensionId: reconDimension.reconDimensionId }, transaction })
+      })
+      // 4º destroy reconDimensions
+      const reconDimensionModel = database.model('ReconDimension')
+      await reconDimensionModel.destroy({ where: { reconDimensionGroup: requestModel.data }, transaction })
+      // 5º destroy root
+      await reconDimensionGroup.destroy({ transaction }).then((rowDeleted: number) => {
         if (rowDeleted === 1) {
           message = 'Delete completed successfully'
           logger.info(message)
@@ -137,9 +158,11 @@ export class ReconciliationService {
       }, (error: any) => {
         throw new ResponseModel(requestModel.model, `${message} (${error.message})`, null)
       })
+      await transaction.commit()
       return new ResponseModel(requestModel.model, message, null)
     } catch (error: any) {
       logger.error(error)
+      await transaction.rollback()
       throw new ResponseModel(requestModel.model, `${message} (${error.message})`, null)
     }
   }

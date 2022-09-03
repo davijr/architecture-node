@@ -186,6 +186,7 @@ reconciliationRoutes.post('/', async (req: any, res: any) => {
     const result = await reconciliationService.create(req.body)
     res.status(200).json(result)
   } catch (error) {
+    logger.error(error)
     return res.status(400).json(error)
   }
 })
