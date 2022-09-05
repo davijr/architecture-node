@@ -10,7 +10,6 @@ import httpMiddleware from 'src/middleware/http.middleware'
 const authRoutes = express.Router()
 const userService = new UserService()
 
-// TODO remover
 authRoutes.post('/user', httpMiddleware, async (req: any, res: any) => {
   const { username } = req.body
 
