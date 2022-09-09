@@ -38,13 +38,13 @@ User.init({
   },
   lastName: {
     type: Sequelize.STRING
-  },
+  }/*,
   loginAttempts: {
     type: Sequelize.INTEGER
   },
   loginAttemptDate: {
     type: Sequelize.DATE
-  }
+  } */
 }, {
   ...globalInitAttributes,
   tableName: 'frontend_user'
