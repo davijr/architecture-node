@@ -18,7 +18,9 @@ export class EditionService {
           await (requestModel.model as any).findAll({}))
       }
       return new ResponseModel(requestModel.model, 'Search completed successfully.',
-        await (requestModel.model as any).findAll({ where: this.buildLikeSearch(requestModel.searchOptions) }))
+        await (requestModel.model as any).findAll({
+          ...ModelUtils.buildSearchOptions(requestModel)
+        }))
     } catch (error: any) {
       logger.error(error)
       throw new ResponseModel(requestModel.model, `Search was finished with error. (${error.message})`, null)
@@ -54,9 +56,14 @@ export class EditionService {
     try {
       requestModel.model = database.model(requestModel.model)
       if (requestModel.transaction) {
-        return new ResponseModel(requestModel.model, 'Insert completed successfully.', await (requestModel.model as any).create(requestModel.data, requestModel.transaction))
+        return new ResponseModel(requestModel.model, 'Insert completed successfully.', await (requestModel.model as any).create(requestModel.data, {
+          transaction: requestModel.transaction,
+          userId: requestModel?.userId,
+          individualHooks: true
+        }))
       }
-      return new ResponseModel(requestModel.model, 'Insert completed successfully.', await (requestModel.model as any).create(requestModel.data))
+      return new ResponseModel(requestModel.model, 'Insert completed successfully.', await (requestModel.model as any)
+        .create(requestModel.data, { userId: requestModel?.userId, individualHooks: true }))
     } catch (error: any) {
       logger.error(error)
       throw new ResponseModel(requestModel.model, `Insert was finished with error. (${error.message})`, null)
@@ -66,7 +73,11 @@ export class EditionService {
   async createTransaction (requestModel: RequestModel, transaction: any): Promise<ResponseModel> {
     try {
       requestModel.model = database.model(requestModel.model)
-      return new ResponseModel(requestModel.model, 'Insert completed successfully.', await (requestModel.model as any).create(requestModel.data, { transaction }))
+      return new ResponseModel(requestModel.model, 'Insert completed successfully.', await (requestModel.model as any).create(requestModel.data, {
+        transaction: requestModel.transaction,
+        userId: requestModel?.userId,
+        individualHooks: true
+      }))
     } catch (error: any) {
       logger.error(error)
       throw new ResponseModel(requestModel.model, `Insert was finished with error. (${error.message})`, null)
@@ -76,7 +87,11 @@ export class EditionService {
   async bulkCreateTransaction (requestModel: RequestModel, transaction: any): Promise<ResponseModel> {
     try {
       requestModel.model = database.model(requestModel.model)
-      return new ResponseModel(requestModel.model, 'Insert completed successfully.', await (requestModel.model as any).bulkCreate(requestModel.data, { transaction }))
+      return new ResponseModel(requestModel.model, 'Insert completed successfully.', await (requestModel.model as any).bulkCreate(requestModel.data, {
+        transaction: requestModel.transaction,
+        userId: requestModel?.userId,
+        individualHooks: true
+      }))
     } catch (error: any) {
       logger.error(error)
       throw new ResponseModel(requestModel.model, `Insert was finished with error. (${error.message})`, null)
@@ -89,22 +104,18 @@ export class EditionService {
       requestModel.model = database.model(requestModel.model)
       const criteria: any = {}
       criteria[requestModel.model.primaryKeyAttribute] = requestModel.data[requestModel.model.primaryKeyAttribute]
-      await (requestModel.model as any).update(requestModel.data, {
-        where: criteria
-      }).then((data: any) => {
-        console.log('aqui', data)
-        if (data) {
-          message = 'Update completed successfully'
-          logger.info(message)
-        } else {
-          logger.error(message)
-          throw new ResponseModel(requestModel.model, `${message}`, null)
-        }
-        return { message }
-      }, (error: any) => {
-        logger.error(error)
-        throw new ResponseModel(requestModel.model, `${message} (${error.message})`, null)
+      const rows = await (requestModel.model as any).update(requestModel.data, {
+        where: criteria,
+        userId: requestModel?.userId,
+        individualHooks: true
       })
+      if (rows && rows[0] === 1) {
+        message = 'Update completed successfully'
+        logger.info(message)
+      } else {
+        logger.error(message)
+        throw new ResponseModel(requestModel.model, `${message}`, null)
+      }
       return new ResponseModel(requestModel.model, message, null)
     } catch (error: any) {
       logger.error(error)
@@ -118,7 +129,10 @@ export class EditionService {
     try {
       const criteria: any = {}
       criteria[requestModel.model.primaryKeyField] = requestModel.data
-      await (requestModel.model as any).destroy({ where: criteria }).then((rowDeleted: number) => { // rowDeleted will return number of rows deleted
+      await (requestModel.model as any).destroy({ where: criteria }, {
+        userId: requestModel?.userId,
+        individualHooks: true
+      }).then((rowDeleted: number) => { // rowDeleted will return number of rows deleted
         if (rowDeleted === 1) {
           message = 'Delete completed successfully'
           logger.info(message)
@@ -185,6 +199,7 @@ export class EditionService {
         menuItems.push(newItem)
       }
     })
+    menuItems.push(...this.getFixedOptions())
     ModelUtils.sort(menuItems, 'name')
     return menuItems
   }
@@ -204,5 +219,54 @@ export class EditionService {
       queryVariables[key] = { [Op.iLike]: `%${searchOptions[key]}%` }
     })
     return queryVariables
+  }
+
+  private getFixedOptions () {
+    return [
+      {
+        name: 'Authorization',
+        active: true,
+        items: [
+          {
+            name: 'User Access Control',
+            route: 'authorization',
+            param: 'access-control',
+            active: true
+          }, {
+            name: 'Roles',
+            route: 'edition',
+            param: 'Role',
+            active: true
+          }, {
+            name: 'Permissions',
+            route: 'edition',
+            param: 'Permission',
+            active: true
+          }
+        ]
+      }, {
+        name: 'Reconciliation',
+        active: true,
+        items: [
+          {
+            name: 'Dimension Group',
+            route: 'reconciliation',
+            param: '',
+            active: true
+          }
+        ]
+      }, {
+        name: 'Settings',
+        active: true,
+        items: [
+          {
+            name: 'System Parameters',
+            route: 'edition',
+            param: 'SystemParam',
+            active: true
+          }
+        ]
+      }
+    ]
   }
 }

@@ -5,20 +5,30 @@ export class ModelUtils {
     const rawAttributes = Object.assign({}, modelObject.rawAttributes)
     const fields: any[] = []
     Object.keys(fieldsObject).forEach((fieldName: string) => {
-      fields.push({
-        name: fieldsObject[fieldName].fieldName,
-        label: this.convertCaseModel(fieldsObject[fieldName].fieldName, 'p', true),
-        length: this.getLength(rawAttributes[fieldName]),
-        type: this.getType(rawAttributes[fieldName], fieldsObject[fieldName].references),
-        required: !fieldsObject[fieldName].allowNull,
-        relationship: this.getReferences(fieldsObject[fieldName])
-      })
+      if (!this.getExcludedAttributes(modelName).includes(fieldName)) {
+        fields.push({
+          name: fieldsObject[fieldName].fieldName,
+          label: this.convertCaseModel(fieldsObject[fieldName].fieldName, 'p', true),
+          length: this.getLength(rawAttributes[fieldName]),
+          type: this.getType(rawAttributes[fieldName], fieldsObject[fieldName].references),
+          required: this.isRequired(fieldsObject[fieldName].allowNull),
+          relationship: this.getReferences(fieldsObject[fieldName])
+        })
+      }
     })
     return {
-      name: modelName,
+      modelName,
       idField: modelObject.primaryKeyAttribute,
       fields
     }
+  }
+
+  private static getExcludedAttributes (modelName: string) {
+    // defining exceptions
+    if (['Audit'].includes(modelName)) {
+      return ['id', 'deletedAt', 'updatedAt']
+    }
+    return ['id', 'createdAt', 'updatedAt', 'deletedAt']
   }
 
   private static getReferences (fieldObject: any) {
@@ -36,13 +46,21 @@ export class ModelUtils {
     return field.type?._length
   }
 
-  private static getType (field: any, isRelationship = false): ('text' | 'number' | 'date' | 'relationship') {
+  private static getType (field: any, isRelationship = false): ('text' | 'number' | 'date' | 'json' | 'relationship') {
     const rawType = field.type?.key
     if (isRelationship) return 'relationship'
     if (['STRING', 'VARCHAR'].includes(rawType)) return 'text'
     if (['INTEGER'].includes(rawType)) return 'number'
-    if (['DATEONLY'].includes(rawType)) return 'date'
+    if (['DATE', 'DATEONLY'].includes(rawType)) return 'date'
+    if (['JSONB'].includes(rawType)) return 'json'
     return 'text'
+  }
+
+  private static isRequired (allowNull: boolean) {
+    if (allowNull === false) {
+      return true
+    }
+    return false
   }
 
   /**
@@ -99,5 +117,22 @@ export class ModelUtils {
       itemName = itemName.replace(words[0], '').trim()
     }
     return itemName
+  }
+
+  public static buildSearchOptions (modelObject: any) {
+    const { searchOptions } = modelObject
+    if (!searchOptions) {
+      return {}
+    } else if (!searchOptions.orderBy) {
+      searchOptions.orderBy = modelObject.model.primaryKeyAttribute
+    }
+    return {
+      order: [
+        [searchOptions?.orderBy, searchOptions?.order || 'ASC'],
+        ['createdAt', 'DESC']
+      ],
+      limit: searchOptions?.limit,
+      offset: searchOptions?.page
+    }
   }
 }

@@ -1,3 +1,5 @@
+import { SystemParamService } from '@services/SystemParamService'
+import moment from 'moment'
 
 export class AppUtils {
   public static getTest () {
@@ -49,10 +51,20 @@ export class AppUtils {
     return parseInt(''.concat(process.env.JWT_EXPIRATION as string).trim())
   }
 
+  public static async getAuthAttemptsToBlock (): Promise<number> {
+    const systemParamService = new SystemParamService()
+    const param: any = await systemParamService.get({ name: 'AUTH_ATTEMPTS_TO_BLOCK' }) || 5
+    return Number(param.AUTH_ATTEMPTS_TO_BLOCK)
+  }
+
   public static sleep (seconds: number) {
     return new Promise((resolve) => {
       setTimeout(resolve, seconds * 1000)
     })
+  }
+
+  public static getDaysToNow (date: Date): number {
+    return moment().diff(date, 'day')
   }
 
   public static menuItemsToFilter () {
@@ -180,9 +192,9 @@ export class AppUtils {
       'PRODUCT_HSBC_GRP_LINK',
       // Recon
       'RECON_BZDF_MAP',
-      'RECON_BZDF_POINT',
-      'RECON_DIMENSION',
-      'RECON_GL_POINT',
+      // 'RECON_BZDF_POINT',
+      // 'RECON_DIMENSION',
+      // 'RECON_GL_POINT',
       'RECON_MATH_OPERATOR',
       'RECON_METRIC',
       // Genldg

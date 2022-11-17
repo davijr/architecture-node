@@ -3,12 +3,13 @@ import logger from '@config/logger'
 import path from 'path'
 import fs from 'fs'
 import { AppUtils } from '@utils/AppUtils'
+import { AuditService } from '@services/AuditService'
 
 const globalInitAttributes: any = {
   schema: process.env.PGSCHEMA || 'public',
   freezeTableName: true,
   underscored: true,
-  timestamps: false,
+  timestamps: true,
   paranoid: true
 }
 
@@ -23,6 +24,8 @@ const connectionOptions: any = {
 
 if (AppUtils.isDBShowSQL()) {
   connectionOptions.logging = (msg: any) => logger.info(msg)
+} else {
+  connectionOptions.logging = false
 }
 
 // TODO Leitura de certificados deve ser via Cloud Storage
@@ -43,8 +46,13 @@ connectionOptions.schema = process.env.PGSCHEMA || 'public'
 
 const database = new Sequelize(connectionOptions)
 
+const auditService = new AuditService()
+database.addHook('afterCreate', (model: any, options: any) => { auditService.log('create', model, options) })
+database.addHook('afterUpdate', (model: any, options: any) => { auditService.log('update', model, options) })
+database.addHook('afterDestroy', (model: any, options: any) => { auditService.log('delete', model, options) })
+
 if (AppUtils.isUseTunnel()) {
-  console.log('start tunnel')
+  console.log('starts tunnel')
   const tunnel = require('tunnel-ssh')
   const config = {
     username: process.env.TUNNEL_CONFIG_USERNAME,
