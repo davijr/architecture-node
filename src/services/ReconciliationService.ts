@@ -20,6 +20,9 @@ export class ReconciliationService {
           offset: requestModel.searchOptions?.page
         }
         const data = await (requestModel.model as any).findAll({
+          order: [
+            ['reconDimensionGroup', 'desc']
+          ],
           include: [
             {
               association: 'reconDimensions',

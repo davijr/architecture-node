@@ -201,6 +201,18 @@ export class EditionService {
     })
     menuItems.push(...this.getFixedOptions())
     ModelUtils.sort(menuItems, 'name')
+    // TODO finalizar RECON de forma dinâmica
+    menuItems.forEach(group => {
+      if (group.name === 'Recon') {
+        group.items = [
+          {
+            active: true,
+            name: 'Dimension Group',
+            route: 'reconciliation'
+          }
+        ]
+      }
+    })
     return menuItems
   }
 
