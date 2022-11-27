@@ -1,6 +1,6 @@
 
 class ResponseModel {
-    model: string
+    model?: string
     message: string
     data?: any
 

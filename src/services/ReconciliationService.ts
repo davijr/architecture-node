@@ -30,7 +30,18 @@ export class ReconciliationService {
                 {
                   association: 'productCodeProduct'
                 }, {
+                  association: 'glClassDomsGlClass'
+                }, {
                   association: 'reconMetric'
+                }, {
+                  association: 'reconBzdfPoints',
+                  include: [
+                    {
+                      association: 'reconBzdfMap'
+                    }, {
+                      association: 'mathOperator'
+                    }
+                  ]
                 }
               ]
             },
@@ -50,24 +61,47 @@ export class ReconciliationService {
     }
   }
 
-  async create (reconDimensionGroupParam: any) {
-    let result: any
+  async save (reconDimensionGroupParam: any) {
+    // variables
     const transaction = await database.transaction()
+    const reconDimensionGroupModel = database.model('ReconDimensionGroup')
+    const reconGlPointModel = database.model('ReconGlPoint')
+    const reconDimensionModel = database.model('ReconDimension')
+    const isUpdate = !!reconDimensionGroupParam.reconDimensionGroup
+    let result: any = {}
     try {
       // 1º ReconDimensionGroup
-      const reconDimensionGroupModel = database.model('ReconDimensionGroup')
-      result = await reconDimensionGroupModel.create({}, { transaction })
-      reconDimensionGroupParam.reconDimensionGroup = result.reconDimensionGroup
+      if (!isUpdate) {
+        result = await reconDimensionGroupModel.create({}, { transaction })
+        reconDimensionGroupParam.reconDimensionGroup = result.reconDimensionGroup
+      }
       // 2º ReconGlPoints
-      const reconGlPointModel = database.model('ReconGlPoint')
+      if (isUpdate) {
+        // remove all children
+        await reconGlPointModel.destroy({
+          where: {
+            reconDimensionGroup: reconDimensionGroupParam.reconDimensionGroup
+          },
+          transaction
+        })
+      }
       result.reconGlPoints = await reconGlPointModel.bulkCreate(this.transformReconGlPoints(reconDimensionGroupParam), { transaction })
       // 3º ReconDimensions and children ReconBzdfPoints
-      const reconDimensionModel = database.model('ReconDimension')
+      if (isUpdate) {
+        // remove all children
+        // await this.deleteReconBzdfPoints(reconDimensionGroupParam.reconDimensions, transaction)
+        await reconDimensionModel.destroy({
+          where: {
+            reconDimensionGroup: reconDimensionGroupParam.reconDimensionGroup
+          },
+          transaction
+        })
+      }
       result.reconDimensions = await reconDimensionModel.bulkCreate(this.transformReconDimensions(reconDimensionGroupParam), {
         include: [{ association: 'reconBzdfPoints' }],
         transaction
       })
-      transaction.commit()
+      await transaction.commit()
       return result
     } catch (error) {
       logger.error(error)
@@ -101,33 +135,13 @@ export class ReconciliationService {
     })
   }
 
-  async update (requestModel: RequestModel): Promise<ResponseModel> {
-    let message = 'Update was finished with error'
-    try {
-      requestModel.model = database.model(requestModel.model)
-      const criteria: any = {}
-      criteria[requestModel.model.primaryKeyAttribute] = requestModel.data[requestModel.model.primaryKeyAttribute]
-      await (requestModel.model as any).update(requestModel.data, {
-        where: criteria
-      }).then((data: any) => {
-        console.log('aqui', data)
-        if (data) {
-          message = 'Update completed successfully'
-          logger.info(message)
-        } else {
-          logger.error(message)
-          throw new ResponseModel(requestModel.model, `${message}`, null)
-        }
-        return { message }
-      }, (error: any) => {
-        logger.error(error)
-        throw new ResponseModel(requestModel.model, `${message} (${error.message})`, null)
-      })
-      return new ResponseModel(requestModel.model, message, null)
-    } catch (error: any) {
-      logger.error(error)
-      throw new ResponseModel(requestModel.model, `${message} (${error.message})`, null)
-    }
+  private async deleteReconBzdfPoints (reconDimensions: any, transaction: any) {
+    const reconBzdfPointModel = database.model('ReconBzdfPoint')
+    reconDimensions.forEach(async (reconDimension: any) => {
+      if (reconDimension.reconDimensionId) {
+        await reconBzdfPointModel.destroy({ where: { reconDimensionId: reconDimension.reconDimensionId }, transaction })
+      }
+    })
   }
 
   async delete (requestModel: RequestModel): Promise<ResponseModel> {
@@ -145,10 +159,7 @@ export class ReconciliationService {
       const reconGlPointModel = database.model('ReconGlPoint')
       await reconGlPointModel.destroy({ where: { reconDimensionGroup: requestModel.data }, transaction })
       // 3º destroy reconBzdfPoints
-      const reconBzdfPointModel = database.model('ReconBzdfPoint')
-      reconDimensionGroup.reconDimensions.forEach(async (reconDimension: any) => {
-        await reconBzdfPointModel.destroy({ where: { reconDimensionId: reconDimension.reconDimensionId }, transaction })
-      })
+      await this.deleteReconBzdfPoints(reconDimensionGroup.reconDimensions, transaction)
       // 4º destroy reconDimensions
       const reconDimensionModel = database.model('ReconDimension')
       await reconDimensionModel.destroy({ where: { reconDimensionGroup: requestModel.data }, transaction })
